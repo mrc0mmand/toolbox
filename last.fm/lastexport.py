@@ -158,7 +158,7 @@ def get_tracks(server, username, startpage=1, sleep_func=time.sleep, tracktype='
         #Skip connect if on first page, already have that one stored.
 
         if page > startpage:
-            response =  connect_server(server, username, page, sleep_func, tracktype)
+            response = connect_server(server, username, page, sleep_func, tracktype)
 
         tracklist = get_tracklist(response)
   	
@@ -182,19 +182,19 @@ def main(server, username, startpage, outfile, infotype='recenttracks'):
         for page, totalpages, tracks in get_tracks(server, username, startpage, tracktype=infotype):
             print "Got page %s of %s.." % (page, totalpages)
             for track in tracks:
-                if infotype == 'recenttracks':
-                    trackdict.setdefault(track[0], track)
-                else:
-                    #Can not use timestamp as key for loved/banned tracks as it's not unique
-                    n += 1
-                    trackdict.setdefault(n, track)
+                # Can not use timestamp as key for loved/banned tracks as it's not unique
+                # EDIT: Can't use timestamp for recenttracks as well, some of them have
+                # 0 instead of timestamp
+                # The final sort of 'un-timestamped' tracks is a little weird, but it works
+                n += 1
+                trackdict.setdefault(n, track)
     except ValueError, e:
         exit(e)
     except Exception:
         raise
     finally:
         with open(outfile, 'a') as outfileobj:
-            tracks = sorted(trackdict.values(), reverse=True)
+            tracks = trackdict.values() 
             write_tracks(tracks, outfileobj)
             print "Wrote page %s-%s of %s to file %s" % (startpage, page, totalpages, outfile)
 
