@@ -26,7 +26,7 @@ for u in $USERS; do
     TYPERC=0
     for t in $TYPES; do
         FILENAME="$DATADIR/$u/${u}_${t}_$(date -Iminutes)"
-        LASTBACKUP="$(find "$DATADIR/$u" -name "*_${t}_*" | sort -r | head -n 1)"
+        LASTBACKUP="$(find "$DATADIR/$u" -type f -name "*_${t}_*" | sort -r | head -n 1)"
         echo "Processing user $u (type: $t, destination: $FILENAME)"
         SECONDS=0
         timeout --foreground $MAXRUN python2.7 \
@@ -42,7 +42,7 @@ for u in $USERS; do
                 OLDCOUNT="$(wc -l "$LASTBACKUP" | awk '{ print $1; }')"
             fi
             if (( $NEWCOUNT - $OLDCOUNT < $MAXDIFF )); then
-                find "$DATADIR/$u/" -name "*_${t}_*" -mtime +7 -exec rm -f {} \;
+                find "$DATADIR/$u/" -type f -name "*_${t}_*" -mtime +7 -exec rm -f {} \;
             else
                 echo "Scrobble difference between last two backups is too big"
                 echo -e "Old: $OLDCOUNT\nNew: $NEWCOUNT"
