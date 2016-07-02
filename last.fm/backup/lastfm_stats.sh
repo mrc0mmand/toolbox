@@ -56,4 +56,4 @@ do
            "$d_last" "${a_last[2]}" "${a_last[1]}" "${a_last[3]}" \
            "$d_scrobbles" "$d_loved"
 
-done < <(find "$DATA_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "_oneshot")
+done < <(find "$DATA_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "_oneshot" | sort)
