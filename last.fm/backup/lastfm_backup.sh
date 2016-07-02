@@ -1,12 +1,20 @@
 #!/usr/bin/bash
 
-USERS="mrc0mmand hot_spot bizon_cz chinese_soup zdena"
-TYPES="scrobbles loved"
-RC=0
-ROOTDIR="$(dirname `readlink -f $0`)"
+if [[ ! -v USERS ]]; then
+    USERS=""
+fi
+if [[ ! -v TYPES ]]; then
+    TYPES="scrobbles loved"
+fi
+if [[ -z $1 ]]; then
+    echo "Root directory must be specified"
+    exit 1
+fi
+ROOTDIR="$1"
 DATADIR="$ROOTDIR/data"
 MAXRUN="2h"
 MAXDIFF=50
+RC=0
 
 trap "exit 1" SIGINT SIGTERM
 
@@ -18,6 +26,7 @@ for u in $USERS; do
     TYPERC=0
     for t in $TYPES; do
         FILENAME="$DATADIR/$u/${u}_${t}_$(date -Iminutes)"
+        LASTBACKUP="$(find "$DATADIR/$u" -name "*_${t}_*" | sort -r | head -n 1)"
         echo "Processing user $u (type: $t, destination: $FILENAME)"
         SECONDS=0
         timeout --foreground $MAXRUN python2.7 \
@@ -27,8 +36,11 @@ for u in $USERS; do
             TYPERC=1
         else
             NEWCOUNT="$(wc -l "$FILENAME" | awk '{ print $1; }')"
-            OLDCOUNT="$(find "$DATADIR/$u" -name "*_${t}_*" | sort -r | head -n 1 |
-                        xargs wc -l | awk '{ print $1; }')"
+            if [[ -z $LASTBACKUP ]]; then
+                OLDCOUNT=0
+            else
+                OLDCOUNT="$(wc -l "$LASTBACKUP" | awk '{ print $1; }')"
+            fi
             if (( $NEWCOUNT - $OLDCOUNT < $MAXDIFF )); then
                 find "$DATADIR/$u/" -name "*_${t}_*" -mtime +14 -exec rm -f {} \;
             else
