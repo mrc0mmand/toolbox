@@ -42,7 +42,7 @@ for u in $USERS; do
                 OLDCOUNT="$(wc -l "$LASTBACKUP" | awk '{ print $1; }')"
             fi
             if (( $NEWCOUNT - $OLDCOUNT < $MAXDIFF )); then
-                find "$DATADIR/$u/" -name "*_${t}_*" -mtime +14 -exec rm -f {} \;
+                find "$DATADIR/$u/" -name "*_${t}_*" -mtime +7 -exec rm -f {} \;
             else
                 echo "Scrobble difference between last two backups is too big"
                 echo -e "Old: $OLDCOUNT\nNew: $NEWCOUNT"
