@@ -16,8 +16,6 @@ function lastfm_get_nowplaying($user) {
     $lastfm_key = "ENTER_VALID_LASTFM_KEY";
     $api_url = "https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks"
              . "&api_key=$lastfm_key&format=json&limit=1";
-
-
     $url = $api_url . "&user=" . urlencode($user);
     $data = curl_get($url);
 
