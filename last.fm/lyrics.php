@@ -50,7 +50,7 @@ function get_lyrics($artist, $track) {
     $url = $base_url . "?artist=$artist&title=$track";
     $data = curl_get($url);
 
-    return $data;
+    return trim($data);
 }
 
 if(PHP_SAPI === "cli") {
