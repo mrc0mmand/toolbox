@@ -21,7 +21,7 @@ function lastfm_get_nowplaying($user) {
 
     if($data === false) {
         echo "Couldn't get user data\n";
-        die;
+        return false;
     }
 
     try {
