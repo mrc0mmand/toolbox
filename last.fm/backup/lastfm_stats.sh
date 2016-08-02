@@ -14,11 +14,11 @@ if [[ -z $DATADIR ]]; then
     exit 1
 fi
 
-DATA_DIR="$1"
 FORMAT="<pre>
 [%s]
 \tscrobbles: %d
 \tloved: %d
+\tinvalid: %d
 \tscrobble info:
 \t\tfirst scrobble:
 \t\t\tdate: %s
@@ -72,7 +72,7 @@ function get_user_stats() {
     mbid_album="$(awk -F '\t' '{print $7;}' "$f_scrobbles" |
                   sort | uniq | wc -l)"
 
-    printf "$FORMAT" "$user" $scrobbles $loved \
+    printf "$FORMAT" "$user" $scrobbles $loved $invalid_scrobbles\
            "$d_first" "${a_first[2]}" "${a_first[1]}" "${a_first[3]}" \
            "$d_last" "${a_last[2]}" "${a_last[1]}" "${a_last[3]}" \
            $mbid_track $mbid_artist $mbid_album \
