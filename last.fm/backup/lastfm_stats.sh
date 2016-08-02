@@ -65,6 +65,7 @@ function get_user_stats() {
                    rev | xargs date --date)"
     scrobbles="$(wc -l "$f_scrobbles" | awk '{print $1;}')"
     loved="$(wc -l "$f_loved" | awk '{print $1;}')"
+    invalid_scrobbles="$(grep -P "^0\t.*" "$f_scrobbles" | wc -l)"
     mbid_track="$(awk -F '\t' '{print $5;}' "$f_scrobbles" |
                   sort | uniq | wc -l)"
     mbid_artist="$(awk -F '\t' '{print $6;}' "$f_scrobbles" |
