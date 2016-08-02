@@ -1,6 +1,15 @@
 #!/bin/bash
 
-if [[ -z $1 ]]; then
+USERMODE=0
+
+if [[ $1 == "-u" ]]; then
+    USERMODE=1
+    DATADIR="$2"
+else
+    DATADIR="$1"
+fi
+
+if [[ -z $DATADIR ]]; then
     echo "Data dir must be specified"
     exit 1
 fi
@@ -30,16 +39,16 @@ FORMAT="<pre>
 \t\tloved: %s\n
 </pre>"
 
-while read -r dir
-do
-    user="$(basename $dir)"
+function get_user_stats() {
+    dir="$1"
+    user="$(basename "$dir")"
     f_scrobbles="$(find "$dir" -type f -name "*_scrobbles_*" |
                    sort -r | head -n1)"
     f_loved="$(find "$dir" -type f -name "*_loved_*" |
                sort -r | head -n1)"
     if [[ ! -f $f_scrobbles || ! -f $f_loved ]]; then
         echo "Incomplete data for user $user"
-        continue
+        return
     fi
     s_first="$(find "$dir" -type f -name "*_scrobbles_*" |
                sort -r | head -n1 | xargs grep -v "^0.*" | tail -n 1 |
@@ -68,5 +77,13 @@ do
            "$d_last" "${a_last[2]}" "${a_last[1]}" "${a_last[3]}" \
            $mbid_track $mbid_artist $mbid_album \
            "$d_scrobbles" "$d_loved"
+}
 
-done < <(find "$DATA_DIR" -mindepth 1 -maxdepth 1 -type d ! -name "_oneshot" | sort)
+if [[ $USERMODE -eq 1 ]]; then
+    get_user_stats "$DATADIR"
+else
+    while read -r dir
+    do
+        get_user_stats "$dir"
+    done < <(find "$DATADIR" -mindepth 1 -maxdepth 1 -type d ! -name "_oneshot" | sort)
+fi
