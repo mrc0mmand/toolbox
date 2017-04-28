@@ -20,11 +20,11 @@ Script for exporting tracks through audioscrobbler API.
 Usage: lastexport.py -u USER [-o OUTFILE] [-p STARTPAGE] [-s SERVER]
 """
 
-import urllib2, urllib, sys, time, re, requests
+import urllib, sys, time, re, requests
 import xml.etree.ElementTree as ET
 from optparse import OptionParser
 
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 
 def get_options(parser):
     """ Define command line options."""
@@ -159,7 +159,6 @@ def get_tracks(server, username, startpage=1, sleep_func=time.sleep, tracktype='
 
     while page <= totalpages:
         #Skip connect if on first page, already have that one stored.
-
         if page > startpage:
             response = connect_server(server, username, page, sleep_func, tracktype)
 
@@ -174,7 +173,6 @@ def get_tracks(server, username, startpage=1, sleep_func=time.sleep, tracktype='
         yield page, totalpages, tracks
 
         page += 1
-        sleep_func(.5)
 
 def main(server, username, startpage, outfile, infotype='recenttracks'):
     trackdict = dict()
