@@ -20,7 +20,7 @@ Script for exporting tracks through audioscrobbler API.
 Usage: lastexport.py -u USER [-o OUTFILE] [-p STARTPAGE] [-s SERVER]
 """
 
-import urllib2, urllib, sys, time, re
+import urllib2, urllib, sys, time, re, requests
 import xml.etree.ElementTree as ET
 from optparse import OptionParser
 
@@ -49,7 +49,7 @@ def get_options(parser):
         infotype = "bannedtracks"
     else:
         infotype = "recenttracks"
-         
+
     return options.username, options.outfile, options.startpage, options.server, infotype
 
 def connect_server(server, username, startpage, sleep_func=time.sleep, tracktype='recenttracks'):
@@ -82,8 +82,11 @@ def connect_server(server, username, startpage, sleep_func=time.sleep, tracktype
     url = baseurl + urllib.urlencode(urlvars)
     for interval in (1, 5, 10, 62):
         try:
-            f = urllib2.urlopen(url)
-            break
+            f = requests.get(url, timeout=5)
+            if f.status_code != requests.codes.ok:
+                raise Exception("Timeout reached")
+            else:
+                break
         except Exception, e:
             last_exc = e
             print "Exception occured, retrying in %ds: %s" % (interval, e)
@@ -92,7 +95,7 @@ def connect_server(server, username, startpage, sleep_func=time.sleep, tracktype
         print "Failed to open page %s" % urlvars['page']
         raise last_exc
 
-    response = f.read()
+    response = f.text.encode("utf-8")
     f.close()
 
     #bad hack to fix bad xml
@@ -161,7 +164,7 @@ def get_tracks(server, username, startpage=1, sleep_func=time.sleep, tracktype='
             response = connect_server(server, username, page, sleep_func, tracktype)
 
         tracklist = get_tracklist(response)
-  	
+
         tracks = []
         for trackelement in tracklist:
             # do not export the currently playing track.
@@ -194,7 +197,7 @@ def main(server, username, startpage, outfile, infotype='recenttracks'):
         raise
     finally:
         with open(outfile, 'a') as outfileobj:
-            tracks = trackdict.values() 
+            tracks = trackdict.values()
             write_tracks(tracks, outfileobj)
             print "Wrote page %s-%s of %s to file %s" % (startpage, page, totalpages, outfile)
 
