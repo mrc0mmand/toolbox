@@ -191,6 +191,7 @@ def main(server, username, startpage, outfile, infotype='recenttracks'):
 
             print "Got page %s of %s [total tracks: %d]" % (page, totalpages, len(tracklist))
     except ValueError, e:
+        print e
         exit(e)
     except Exception:
         raise

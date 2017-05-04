@@ -12,7 +12,6 @@ if [[ -z $1 ]]; then
 fi
 ROOTDIR="$1"
 DATADIR="$ROOTDIR/data"
-MAXRUN="2h"
 MAXDIFF=50
 RC=0
 
@@ -29,8 +28,7 @@ for u in $USERS; do
         LASTBACKUP="$(find "$DATADIR/$u" -type f -name "*_${t}_*" | sort -r | head -n 1)"
         echo "Processing user $u (type: $t, destination: $FILENAME)"
         SECONDS=0
-        timeout --foreground $MAXRUN python2.7 \
-                "$ROOTDIR/lastexport.py" -u "$u" -o "$FILENAME" -t $t
+        python2.7 "$ROOTDIR/lastexport.py" -u "$u" -o "$FILENAME" -t $t
         echo "Download finished in $SECONDS seconds"
         if [[ $? -ne 0 || ! -s $FILENAME ]]; then
             TYPERC=1
