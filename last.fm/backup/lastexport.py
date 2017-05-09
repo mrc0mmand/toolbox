@@ -80,7 +80,7 @@ def connect_server(server, username, startpage, sleep_func=time.sleep, tracktype
                     limit=200)
 
     url = baseurl + urllib.urlencode(urlvars)
-    for interval in (1, 5, 10, 62):
+    for interval in (1, 5, 10, 60, 120, 180):
         try:
             f = requests.get(url, timeout=5)
             if f.status_code != requests.codes.ok:
