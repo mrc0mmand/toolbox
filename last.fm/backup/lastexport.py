@@ -63,7 +63,7 @@ def connect_server(server, username, startpage, sleep_func=time.sleep, tracktype
                     limit=200)
 
     elif server == "last.fm":
-        baseurl = 'https://ws.audioscrobbler.com/2.0/?'
+        baseurl = 'http://ws.audioscrobbler.com/2.0/?'
         urlvars = dict(method='user.get%s' % tracktype,
                     api_key='d9c9176bc06b9938a8d4495928328070', #'e38cc7822bd7476fe4083e36ee69748e',
                     user=username,
