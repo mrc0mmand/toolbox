@@ -1,6 +1,55 @@
 #!/usr/bin/env python3
 
+# Simple python script for Last.FM profile database backup
+#
+# Features:
+#  - local SQLite database for data storage
+#  - incremental backups
+#  - export to plaintext
+#  - statistics
+#
+# Basic usage (see ./lastfm-backup.py --help):
+#  1) First sync
+#    $ ./lastfm-backup.py -u mrc0mmand -s  # full backup of scrobbles
+#    $ ./lastfm-backup.py -u mrc0mmand -l  # full backup of loved tracks
+#    All future executions of the above commands will do an incremental backup
+#    instead of a full one (until the corresponding DB is deleted)
+#
+#  2) Re-sync (useful when the first sync unexpectedly ended)
+#    $ ./lastfm-backup.py -u mrc0mmand -s --force
+#    This forces a full backup, but skips tracks already saved in the DB
+#
+#  3) Export to a plaintext file
+#    $ ./lastfm-backup.py -u mrc0mmand -s --export exp.txt
+#    This will export all scrobbles of given user into a tab-separated file
+#    exp.txt
+#
+#    $ ./lastfm-backup.py -u mrc0mmand -s --export exp.txt --separator \;
+#    Same as above, but with a semicolon as a separator instead of a tab
+#
 # Supported srobble types: recenttracks, lovedtracks
+
+# MIT License
+#
+# Copyright (c) [2017] [Frantisek Sumsal <frantisek@sumsal.cz>]
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 from datetime import datetime
 import argparse
@@ -224,6 +273,11 @@ def db_stats():
     db.close()
 
 if __name__ == "__main__":
+
+    if not API_KEY:
+        print("Missing API key")
+        sys.exit(1)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--db", dest="dbname", default="lastfm-backup.db3",
             help="SQLite database name")
