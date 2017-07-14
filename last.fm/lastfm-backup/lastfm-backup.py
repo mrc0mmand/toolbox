@@ -2,6 +2,7 @@
 
 # Supported srobble types: recenttracks, lovedtracks
 
+from datetime import datetime
 import argparse
 import requests
 import sqlite3
@@ -75,11 +76,11 @@ def lastfm_process_tracks(track_page, track_type):
         yield data
 
 def lastfm_process():
-    processed = 0
-    stored = 0
     db = sqlite3.connect(args.dbname)
 
     for scrobble_type in args.stypes:
+        processed = 0
+        stored = 0
         page = 1
         res = lastfm_get_scrobbles(args.username, page, scrobble_type)
         page_count = int(res[scrobble_type]["@attr"]["totalPages"])
@@ -87,6 +88,7 @@ def lastfm_process():
         db_init(db, args.username, scrobble_type)
         last_ts = db_get_last_ts(db, args.username, scrobble_type)
 
+        print("[Backup] User: {}, type: {}".format(args.username, scrobble_type))
         while page <= page_count:
             for track in lastfm_process_tracks(res, scrobble_type):
                 # Check if the processed track is already in the DB.
@@ -106,6 +108,8 @@ def lastfm_process():
                     .format(page, page_count, processed, stored))
             page += 1
             res = lastfm_get_scrobbles(args.username, page, scrobble_type)
+
+    db.close()
 
 # Initialize database (create a data table if it doesn't exist)
 def db_init(db, username, scrobble_type):
@@ -159,12 +163,68 @@ def db_export(scrobble_type):
     for row in cur:
         out.write(args.separator.join(str(x) for x in row) + "\n")
     out.close()
+    db.close()
+
+# Get some overall statistics about saved data
+def db_stats():
+    db = sqlite3.connect(args.dbname)
+    db.row_factory = sqlite3.Row
+
+    print("[{}]".format(args.username))
+
+    if "recenttracks" in args.stypes:
+        cur = db.cursor()
+        # Overall statistics
+        cur.execute("SELECT COUNT(*) AS total,"
+                    "COUNT(DISTINCT artist) AS artists,"
+                    "COUNT(DISTINCT artist_mbid) AS artists_mbid,"
+                    "COUNT(DISTINCT track) AS tracks,"
+                    "COUNT(DISTINCT track_mbid) AS tracks_mbid,"
+                    "COUNT(DISTINCT album) AS albums,"
+                    "COUNT(DISTINCT album_mbid) AS albums_mbid "
+                    "FROM {}_{}".format(args.username, "recenttracks"))
+        res = cur.fetchone()
+        print("\tscrobbles: {}\n"
+              "\tartists: {} (MBIDs: {})\n"
+              "\tatracks: {} (MBIDs: {})\n"
+              "\talbums: {} (MBIDs: {})"
+              .format(res["total"], res["artists"], res["artists_mbid"],
+                  res["tracks"], res["tracks_mbid"], res["albums"],
+                  res["albums_mbid"]))
+        # First scrobble
+        cur.execute("SELECT * FROM {}_{} ORDER BY timestamp ASC LIMIT 1"
+                .format(args.username, "recenttracks"))
+        res = cur.fetchone()
+        dt = datetime.fromtimestamp(res["timestamp"])
+        print("\tfirst scrobble:\n"
+              "\t\tdate: {}\n"
+              "\t\tartist: {}\n"
+              "\t\ttrack: {}\n"
+              "\t\talbum: {}"
+              .format(dt, res["artist"], res["track"], res["album"]))
+        # Last scrobble
+        cur.execute("SELECT * FROM {}_{} ORDER BY timestamp DESC LIMIT 1"
+                .format(args.username, "recenttracks"))
+        res = cur.fetchone()
+        dt = datetime.fromtimestamp(res["timestamp"])
+        print("\tlast scrobble:\n"
+              "\t\tdate: {}\n"
+              "\t\tartist: {}\n"
+              "\t\ttrack: {}\n"
+              "\t\talbum: {}"
+              .format(dt, res["artist"], res["track"], res["album"]))
+
+    if "lovedtracks" in args.stypes:
+        cur = db.cursor()
+        cur.execute("SELECT COUNT(*) AS total FROM {}_{}"
+                .format(args.username, "lovedtracks"))
+        res = cur.fetchone()
+        print("\tloved tracks: {}".format(res["total"]))
+
+    db.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # TODO: Stats options
-    # --stats (print all stats)
-    # ...
     parser.add_argument("-d", "--db", dest="dbname", default="lastfm-backup.db3",
             help="SQLite database name")
     parser.add_argument("-u", "--user", dest="username", default=None,
@@ -188,6 +248,10 @@ if __name__ == "__main__":
     export_opts.add_argument("--separator", default="\t",
             help="Override default column separator (TAB)")
 
+    stats_opts = parser.add_argument_group("Statistics")
+    stats_opts.add_argument("--stats", action="store_true",
+            help="Print statistics for given username/scrobble type combination")
+
     args = parser.parse_args()
 
     if not args.stypes:
@@ -200,5 +264,7 @@ if __name__ == "__main__":
                              "for export\n")
             sys.exit(1)
         db_export(args.stypes[0])
+    elif args.stats:
+        db_stats()
     else:
         lastfm_process()
