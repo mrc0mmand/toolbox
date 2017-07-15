@@ -141,7 +141,7 @@ def lastfm_process():
         res = lastfm_get_scrobbles(args.username, page, scrobble_type)
         page_count = int(res[scrobble_type]["@attr"]["totalPages"])
 
-        db_init(db, args.username, scrobble_type)
+        db_init(db, args.username, scrobble_type, args.drop)
         last_ts = db_get_last_ts(db, args.username, scrobble_type)
 
         print("[Backup] User: {}, type: {}".format(args.username, scrobble_type))
@@ -167,8 +167,11 @@ def lastfm_process():
     db.close()
 
 # Initialize database (create a data table if it doesn't exist)
-def db_init(db, username, scrobble_type):
+def db_init(db, username, scrobble_type, drop=False):
     cur = db.cursor()
+    if drop:
+        cur.execute("DROP TABLE IF EXISTS {}_{}".format(username, scrobble_type))
+
     cur.execute("CREATE TABLE IF NOT EXISTS {}_{}("
             "timestamp INTEGER PRIMARY KEY,"
             "artist DATA NOT NULL,"
@@ -292,6 +295,8 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true",
             help="re-download all tracks (don't check for the last stored "
                  "timestamp)")
+    parser.add_argument("--drop", action="store_true",
+            help="Drop the selected data table before scrobble processing")
 
     scrobble_types = parser.add_argument_group("Scrobble type")
     scrobble_types.add_argument("-s", "--scrobbles", dest="stypes",
