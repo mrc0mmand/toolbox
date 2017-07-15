@@ -23,6 +23,8 @@
 #    $ ./lastfm-backup.py -u mrc0mmand -s --export exp.txt
 #    This will export all scrobbles of given user into a tab-separated file
 #    exp.txt
+#    Export format:
+#      timestamp artist artist_mbid track track_mbid album album_mbid
 #
 #    $ ./lastfm-backup.py -u mrc0mmand -s --export exp.txt --separator \;
 #    Same as above, but with a semicolon as a separator instead of a tab
@@ -282,7 +284,6 @@ def db_stats():
     db.close()
 
 if __name__ == "__main__":
-
     if not API_KEY:
         print("Missing API key")
         sys.exit(1)
