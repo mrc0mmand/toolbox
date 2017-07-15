@@ -319,8 +319,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not re.match("^[a-zA-Z0-9\-_]+$", args.username):
-        sys.stderr.write("Invalid username (only letters, numbers, - and _)\n")
+    if not re.match("^[a-zA-Z][a-zA-Z0-9\-_]+$", args.username):
+        sys.stderr.write("Invalid username (only letters, numbers, - and _,"
+                " must begin with a letter)\n")
         sys.exit(1)
 
     if not args.stypes:
