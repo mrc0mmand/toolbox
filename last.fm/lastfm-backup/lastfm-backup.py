@@ -308,6 +308,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if not re.match("^[a-zA-Z0-9\-_]+$", args.username):
+        sys.stderr.write("Invalid username (only letters, numbers, - and _)\n")
+        sys.exit(1)
+
     if not args.stypes:
         sys.stderr.write("At least one scrobble type must be selected\n")
         sys.exit(1)
