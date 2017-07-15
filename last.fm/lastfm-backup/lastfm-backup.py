@@ -28,6 +28,12 @@
 #    Same as above, but with a semicolon as a separator instead of a tab
 #
 # Supported srobble types: recenttracks, lovedtracks
+#
+# API key:
+#  An API key needs to be set up before the script can be used. Go to
+#  https://www.last.fm/api/account/create, fill in required info, and
+#  copy and paste the shown API key into the variable API_KEY below.
+#
 
 # MIT License
 #
