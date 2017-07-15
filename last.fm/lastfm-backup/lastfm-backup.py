@@ -137,6 +137,7 @@ def lastfm_process():
         processed = 0
         stored = 0
         page = 1
+        end = False
         res = lastfm_get_scrobbles(args.username, page, scrobble_type)
         page_count = int(res[scrobble_type]["@attr"]["totalPages"])
 
@@ -144,14 +145,13 @@ def lastfm_process():
         last_ts = db_get_last_ts(db, args.username, scrobble_type)
 
         print("[Backup] User: {}, type: {}".format(args.username, scrobble_type))
-        while page <= page_count:
+        while page <= page_count and not end:
             for track in lastfm_process_tracks(res, scrobble_type):
                 # Check if the processed track is already in the DB.
                 # If so, end the processing, as the remaining tracks
                 # were already saved
                 if track["ts"] <= last_ts:
-                    # Set page_count to 0 to break out of the outer loop
-                    page_count = 0
+                    end = True
                     print("Found track from the last backup, skipping the rest.")
                     break
 
