@@ -69,22 +69,12 @@ import sys
 import re
 
 API_KEY=""
+BASEURL = "http://ws.audioscrobbler.com/2.0/?"
 
-# Get a page of scrobbles from Last.FM
-def lastfm_get_scrobbles(username, page, scrobble_type):
-    baseurl = "http://ws.audioscrobbler.com/2.0/?"
-    urlvars = {
-        "api_key" : API_KEY,
-        "format"  : "json",
-        "limit"   : 200, # Max limit is 200
-        "method"  : "user.get{}".format(scrobble_type),
-        "page"    : page,
-        "user"    : username
-    }
-
+def url_get(url, urlvars, timeout=5):
     for interval in (1, 5, 10, 60, 120, 180):
         try:
-            f = requests.get(baseurl,data=urlvars, timeout=5)
+            f = requests.get(url ,data=urlvars, timeout=timeout)
             if f.status_code != requests.codes.ok:
                 raise Exception("Timeout reached ({})".format(f.status_code))
             else:
@@ -97,8 +87,98 @@ def lastfm_get_scrobbles(username, page, scrobble_type):
         print("Failed to open page {}".format(page))
         raise last_exc
 
-    response = json.loads(f.text)
+    data = f.text
     f.close()
+
+    return data
+
+# Autocorrect type: artist, track, album
+def lastfm_autocorrect_get(urlvars, a_type):
+    data = url_get(BASEURL, urlvars)
+    res = json.loads(data)
+
+    try:
+        name = res[a_type]["name"]
+        if "mbid" in res[a_type]:
+            mbid = res[a_type]["mbid"]
+        else:
+            mbid = ""
+    except Exception as e:
+        error = lastfm_error(res)
+        if not error:
+            error = e
+        raise Exception("[Autocorrect]: {} autocorrection failed, reason: {}"
+                "(name: {}, mbid: {})\n"
+                .format(a_type, error, urlvars.get(a_type, ""),
+                    urlvars.get("mbid", "")))
+
+    return name, mbid
+
+def lastfm_autocorrect(scrobble):
+    urlvars = {
+        "api_key"     : API_KEY,
+        "format"      : "json",
+        "autocorrect" : 1
+    }
+
+    # Artist autocorrect
+    vars_artist = urlvars.copy()
+    vars_artist["method"] = "artist.getinfo"
+    vars_artist["artist"] = scrobble["artist"]
+    if scrobble["artist_mbid"]:
+        vars_artist["mbid"] = scrobble["artist_mbid"]
+
+    artist, artist_mbid = lastfm_autocorrect_get(vars_artist, "artist")
+
+    # Track autocorrect
+    vars_track = urlvars.copy()
+    vars_track["method"] = "track.getinfo"
+    vars_track["artist"] = artist # Use autocorrected artist
+    vars_track["track"] = scrobble["name"]
+    if scrobble["name_mbid"]:
+        vars_track["mbid"] = scrobble["name_mbid"]
+
+    track, track_mbid = lastfm_autocorrect_get(vars_track, "track")
+
+    # Album autocorrect
+    if scrobble["album"] or scrobble["album_mbid"]:
+        vars_album = urlvars.copy()
+        vars_album["method"] = "album.getinfo"
+        vars_album["artist"] = artist # Use autocorrected artist
+        vars_album["album"] = scrobble["album"]
+        if scrobble["album_mbid"]:
+            vars_album["mbid"] = scrobble["album_mbid"]
+
+        album, album_mbid = lastfm_autocorrect_get(vars_album, "album")
+
+    # Replace original data with the autocorrected data
+    scrobble["artist"] = artist
+    scrobble["artist_mbid"] = artist_mbid
+    scrobble["name"] = track
+    scrobble["name_mbid"] = track_mbid
+    if scrobble["album"]:
+        scrobble["album"] = album
+        scrobble["album_mbid"] = album_mbid
+
+def lastfm_error(json):
+    if "message" in json and json["message"]:
+        return json["message"]
+    else:
+        return None
+
+# Get a page of scrobbles from Last.FM
+def lastfm_get_scrobbles(username, page, scrobble_type):
+    urlvars = {
+        "api_key" : API_KEY,
+        "format"  : "json",
+        "limit"   : 200, # Max limit is 200
+        "method"  : "user.get{}".format(scrobble_type),
+        "page"    : page,
+        "user"    : username
+    }
+
+    data = url_get(BASEURL, urlvars)
+    response = json.loads(data)
 
     #print(json.dumps(response, indent=4))
     return response
@@ -129,6 +209,12 @@ def lastfm_process_tracks(track_page, track_type):
         else:
             data["album"] = ""
             data["album_mbid"] = ""
+
+        if args.autocorrect:
+            try:
+                lastfm_autocorrect(data)
+            except Exception as e:
+                sys.stderr.write(str(e))
 
         yield data
 
@@ -283,6 +369,26 @@ def db_stats():
 
     db.close()
 
+def _tests():
+    scrobble = {
+        "artist"      : "c lekktor",
+        "artist_mbid" : "",
+        "name"        : "we are all ready death",
+        "name_mbid"   : "",
+        "album"       : "",
+        "album_mbid"  : "5cea855b-56ee-3c0d-83b2-629db3b98322",
+        "ts"          : 0
+    }
+
+    print(scrobble)
+    lastfm_autocorrect(scrobble)
+    print(scrobble)
+
+    if not scrobble["artist_mbid"] or not scrobble["name_mbid"] \
+            or not scrobble["album_mbid"]:
+        print("Autocorrect test failed")
+        return 1
+
 if __name__ == "__main__":
     if not API_KEY:
         print("Missing API key")
@@ -296,8 +402,14 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true",
             help="re-download all tracks (don't check for the last stored "
                  "timestamp)")
+    parser.add_argument("--autocorrect", action="store_true",
+            help="Autocorrects scrobble data using Last.FM database "
+                 "(warning: this takes some time as it requires another "
+                 "three API calls)")
     parser.add_argument("--drop", action="store_true",
             help="Drop the selected data table before scrobble processing")
+    parser.add_argument("--tests", action="store_true",
+            help="Perform some sanity/unit tests")
 
     scrobble_types = parser.add_argument_group("Scrobble type")
     scrobble_types.add_argument("-s", "--scrobbles", dest="stypes",
@@ -337,5 +449,7 @@ if __name__ == "__main__":
         db_export(args.stypes[0])
     elif args.stats:
         db_stats()
+    elif args.tests:
+        _tests()
     else:
         lastfm_process()
