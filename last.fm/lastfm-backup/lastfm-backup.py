@@ -89,6 +89,10 @@ class Scrobble(object):
                .format(self.ts, self.artist, self.artist_mbid, self.track,
                        self.track_mbid, self.album, self.album_mbid)
 
+def printv(string):
+    if args.verbose:
+        print(string)
+
 def url_get(url, urlvars, timeout=5):
     for interval in (1, 5, 10, 60, 120, 180):
         try:
@@ -261,6 +265,7 @@ def lastfm_process():
                 rv = db_save_scrobble(db, scrobble, args.username)
                 stored += rv
                 processed += 1
+                printv("[Scrobble #{}]\n{}\n".format(processed, scrobble))
 
             print("[Stats] pages: {}/{}, processed: {} tracks, stored: {} tracks"
                     .format(page, page_count, processed, stored))
@@ -422,6 +427,8 @@ if __name__ == "__main__":
             help="Drop the selected data table before scrobble processing")
     parser.add_argument("--tests", action="store_true",
             help="Perform some sanity/unit tests")
+    parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
+            help="Increase verbosity")
 
     scrobble_types = parser.add_argument_group("Scrobble type")
     scrobble_types.add_argument("-s", "--scrobbles", dest="stypes",
