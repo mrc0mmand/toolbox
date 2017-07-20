@@ -412,42 +412,42 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--autocorrect", action="store_true",
+            help="autocorrects scrobble data using Last.FM database "
+                 "(warning: this is really slow as it requires another "
+                 "three API calls)")
     parser.add_argument("-d", "--db", dest="dbname", default="lastfm-backup.db3",
             help="SQLite database name")
-    parser.add_argument("-u", "--user", dest="username", default=None,
-            help="Last.FM user name", required=True)
+    parser.add_argument("--drop", action="store_true",
+            help="drop the selected data table before scrobble processing")
     parser.add_argument("--force", action="store_true",
             help="re-download all tracks (don't check for the last stored "
                  "timestamp)")
-    parser.add_argument("--autocorrect", action="store_true",
-            help="Autocorrects scrobble data using Last.FM database "
-                 "(warning: this takes some time as it requires another "
-                 "three API calls)")
-    parser.add_argument("--drop", action="store_true",
-            help="Drop the selected data table before scrobble processing")
     parser.add_argument("--tests", action="store_true",
-            help="Perform some sanity/unit tests")
+            help="perform some sanity/unit tests")
+    parser.add_argument("-u", "--user", dest="username", default=None,
+            help="Last.FM user name", required=True)
     parser.add_argument("-v", "--verbose", dest="verbose", action="store_true",
-            help="Increase verbosity")
+            help="increase verbosity")
 
     scrobble_types = parser.add_argument_group("Scrobble type")
-    scrobble_types.add_argument("-s", "--scrobbles", dest="stypes",
-            default=None, help="scrobbles", action="append_const",
-            const="recenttracks")
     scrobble_types.add_argument("-l", "--loved", dest="stypes",
             default=None, help="loved tracks", action="append_const",
             const="lovedtracks")
+    scrobble_types.add_argument("-s", "--scrobbles", dest="stypes",
+            default=None, help="scrobbles", action="append_const",
+            const="recenttracks")
 
     export_opts = parser.add_argument_group("Export")
     export_opts.add_argument("-e", "--export", dest="export", default=None,
             metavar="FILENAME",
-            help="Export selected database into a tab-separated text file")
+            help="export selected database into a tab-separated text file")
     export_opts.add_argument("--separator", default="\t",
-            help="Override default column separator (TAB)")
+            help="override default column separator (TAB)")
 
     stats_opts = parser.add_argument_group("Statistics")
     stats_opts.add_argument("--stats", action="store_true",
-            help="Print statistics for given username/scrobble type combination")
+            help="print statistics for given username/scrobble type combination")
 
     args = parser.parse_args()
 
