@@ -71,6 +71,24 @@ import re
 API_KEY=""
 BASEURL = "http://ws.audioscrobbler.com/2.0/?"
 
+class Scrobble(object):
+    def __init__(self, ts=0, artist="", artist_mbid="", track="", track_mbid="",
+            album="", album_mbid="", type="recenttracks"):
+        self.ts = ts
+        self.artist = artist
+        self.artist_mbid = artist_mbid
+        self.track = track
+        self.track_mbid = track_mbid
+        self.album = album
+        self.album_mbid = album_mbid
+        self.type = type
+
+    def __str__(self):
+        return "Timestamp:\t{}\nArtist:\t\t{}\nArist MBID:\t{}\nTrack:\t\t{}\n" \
+               "Track MBID:\t{}\nAlbum:\t\t{}\nAlbum MBID:\t{}" \
+               .format(self.ts, self.artist, self.artist_mbid, self.track,
+                       self.track_mbid, self.album, self.album_mbid)
+
 def url_get(url, urlvars, timeout=5):
     for interval in (1, 5, 10, 60, 120, 180):
         try:
@@ -108,7 +126,7 @@ def lastfm_autocorrect_get(urlvars, a_type):
         if not error:
             error = e
         raise Exception("[Autocorrect]: {} autocorrection failed, reason: {}"
-                "(name: {}, mbid: {})\n"
+                "(name: {}, mbid: {})"
                 .format(a_type, error, urlvars.get(a_type, ""),
                     urlvars.get("mbid", "")))
 
@@ -124,9 +142,9 @@ def lastfm_autocorrect(scrobble):
     # Artist autocorrect
     vars_artist = urlvars.copy()
     vars_artist["method"] = "artist.getinfo"
-    vars_artist["artist"] = scrobble["artist"]
-    if scrobble["artist_mbid"]:
-        vars_artist["mbid"] = scrobble["artist_mbid"]
+    vars_artist["artist"] = scrobble.artist
+    if scrobble.artist_mbid:
+        vars_artist["mbid"] = scrobble.artist_mbid
 
     artist, artist_mbid = lastfm_autocorrect_get(vars_artist, "artist")
 
@@ -134,31 +152,31 @@ def lastfm_autocorrect(scrobble):
     vars_track = urlvars.copy()
     vars_track["method"] = "track.getinfo"
     vars_track["artist"] = artist # Use autocorrected artist
-    vars_track["track"] = scrobble["name"]
-    if scrobble["name_mbid"]:
-        vars_track["mbid"] = scrobble["name_mbid"]
+    vars_track["track"] = scrobble.track
+    if scrobble.track_mbid:
+        vars_track["mbid"] = scrobble.track_mbid
 
     track, track_mbid = lastfm_autocorrect_get(vars_track, "track")
 
     # Album autocorrect
-    if scrobble["album"] or scrobble["album_mbid"]:
+    if scrobble.album or scrobble.album_mbid:
         vars_album = urlvars.copy()
         vars_album["method"] = "album.getinfo"
         vars_album["artist"] = artist # Use autocorrected artist
-        vars_album["album"] = scrobble["album"]
-        if scrobble["album_mbid"]:
-            vars_album["mbid"] = scrobble["album_mbid"]
+        vars_album["album"] = scrobble.album
+        if scrobble.album_mbid:
+            vars_album["mbid"] = scrobble.album_mbid
 
         album, album_mbid = lastfm_autocorrect_get(vars_album, "album")
 
     # Replace original data with the autocorrected data
-    scrobble["artist"] = artist
-    scrobble["artist_mbid"] = artist_mbid
-    scrobble["name"] = track
-    scrobble["name_mbid"] = track_mbid
-    if scrobble["album"]:
-        scrobble["album"] = album
-        scrobble["album_mbid"] = album_mbid
+    scrobble.artist = artist
+    scrobble.artist_mbid = artist_mbid
+    scrobble.track = track
+    scrobble.track_mbid = track_mbid
+    if scrobble.album or scrobble.album_mbid:
+        scrobble.album = album
+        scrobble.album_mbid = album_mbid
 
 def lastfm_error(json):
     if "message" in json and json["message"]:
@@ -183,40 +201,37 @@ def lastfm_get_scrobbles(username, page, scrobble_type):
     #print(json.dumps(response, indent=4))
     return response
 
-def lastfm_process_tracks(track_page, track_type):
-    for track in track_page[track_type]["track"]:
+def lastfm_process_scrobbles(scrobble_page, scrobble_type):
+    for scb in scrobble_page[scrobble_type]["track"]:
         try:
-            if track["@attr"]["nowplaying"]:
+            if scb["@attr"]["nowplaying"]:
                 continue
         except:
             pass
 
         # Loved tracks have the text info nested in a "name" tag
-        name_tag = "#text" if track_type == "recenttracks" else "name"
-
-        data = {
-            "artist"      : track["artist"][name_tag],
-            "artist_mbid" : track["artist"]["mbid"],
-            "name"        : track["name"],
-            "name_mbid"   : track["mbid"],
-            "ts"          : int(track["date"]["uts"])
-        }
+        name_tag = "#text" if scrobble_type == "recenttracks" else "name"
+        scrobble = Scrobble(
+                ts=int(scb["date"]["uts"]),
+                artist=scb["artist"][name_tag],
+                artist_mbid=scb["artist"]["mbid"],
+                track=scb["name"],
+                track_mbid=scb["mbid"],
+                type=scrobble_type
+        )
 
         # Loved tracks usually don't contain album
-        if "album" in track:
-            data["album"] = track["album"][name_tag]
-            data["album_mbid"] = track["album"]["mbid"]
-        else:
-            data["album"] = ""
-            data["album_mbid"] = ""
+        if "album" in scb:
+            scrobble.album = scb["album"][name_tag]
+            scrobble.album_mbid = scb["album"]["mbid"]
 
         if args.autocorrect:
             try:
-                lastfm_autocorrect(data)
+                lastfm_autocorrect(scrobble)
             except Exception as e:
-                sys.stderr.write(str(e))
+                sys.stderr.write(str(e) + "\n")
 
-        yield data
+        yield scrobble
 
 def lastfm_process():
     db = sqlite3.connect(args.dbname)
@@ -234,16 +249,16 @@ def lastfm_process():
 
         print("[Backup] User: {}, type: {}".format(args.username, scrobble_type))
         while page <= page_count and not end:
-            for track in lastfm_process_tracks(res, scrobble_type):
+            for scrobble in lastfm_process_scrobbles(res, scrobble_type):
                 # Check if the processed track is already in the DB.
                 # If so, end the processing, as the remaining tracks
                 # were already saved
-                if track["ts"] <= last_ts:
+                if scrobble.ts <= last_ts:
                     end = True
                     print("Found track from the last backup, skipping the rest.")
                     break
 
-                rv = db_save_track(db, track, args.username, scrobble_type)
+                rv = db_save_scrobble(db, scrobble, args.username)
                 stored += rv
                 processed += 1
 
@@ -289,12 +304,12 @@ def db_get_last_ts(db, username, scrobble_type):
         return 0
 
 # Save the given track into the DB
-def db_save_track(db, track, username, scrobble_type):
+def db_save_scrobble(db, scrobble, username):
     cur = db.cursor()
     cur.execute("INSERT OR IGNORE INTO {}_{} VALUES(?, ?, ?, ?, ?, ?, ?)"
-            .format(username, scrobble_type),
-            (track["ts"], track["artist"], track["artist_mbid"], track["name"],
-                track["name_mbid"], track["album"], track["album_mbid"]))
+            .format(username, scrobble.type),
+            (scrobble.ts, scrobble.artist, scrobble.artist_mbid, scrobble.track,
+                scrobble.track_mbid, scrobble.album, scrobble.album_mbid))
     db.commit()
 
     return cur.rowcount
@@ -370,22 +385,19 @@ def db_stats():
     db.close()
 
 def _tests():
-    scrobble = {
-        "artist"      : "c lekktor",
-        "artist_mbid" : "",
-        "name"        : "we are all ready death",
-        "name_mbid"   : "",
-        "album"       : "",
-        "album_mbid"  : "5cea855b-56ee-3c0d-83b2-629db3b98322",
-        "ts"          : 0
-    }
+    scrobble = Scrobble(
+        artist="c lekktor",
+        track="we are all ready death",
+        album_mbid="5cea855b-56ee-3c0d-83b2-629db3b98322",
+        ts=0
+    )
 
-    print(scrobble)
+    print("Before autocorrect:\n{}\n".format(scrobble))
     lastfm_autocorrect(scrobble)
-    print(scrobble)
+    print("After autocorrect:\n{}".format(scrobble))
 
-    if not scrobble["artist_mbid"] or not scrobble["name_mbid"] \
-            or not scrobble["album_mbid"]:
+    if not scrobble.artist_mbid or not scrobble.track_mbid \
+            or not scrobble.album_mbid:
         print("Autocorrect test failed")
         return 1
 
