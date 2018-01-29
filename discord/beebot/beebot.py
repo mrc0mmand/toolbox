@@ -5,6 +5,7 @@ import asyncio
 import random
 
 bee_emoji = "🐝"
+poop_emoji = "💩"
 quotes = {
     "Ray Bradbury" : "Bees do have a smell, you know, and if they don’t they should, for their feet are dusted with spices from a million flowers.",
     "Muriel Barbery" : "We think we can make honey without sharing in the fate of bees, but we are in truth nothing but poor bees, destined to accomplish our task and then die.",
