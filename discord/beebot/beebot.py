@@ -7,7 +7,7 @@ import random
 bee_emoji = "🐝"
 quotes = {
     "Ray Bradbury" : "Bees do have a smell, you know, and if they don’t they should, for their feet are dusted with spices from a million flowers.",
-    "Muriel Barbery" : "iWe think we can make honey without sharing in the fate of bees, but we are in truth nothing but poor bees, destined to accomplish our task and then die.",
+    "Muriel Barbery" : "We think we can make honey without sharing in the fate of bees, but we are in truth nothing but poor bees, destined to accomplish our task and then die.",
     "William Longgood" : "The bee is domesticated but not tamed.",
     "Marcus Aurelius" : "That which is not good for the bee-hive cannot be good for the bees.",
     "William Blake" : "The busy bee has no time for sorrow.",
@@ -39,4 +39,10 @@ async def on_message(message):
         author, quote = random.choice(list(quotes.items()))
         await client.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
 
+    if message.content.lower() == "ronnie":
+        await client.send_message(message.channel, "Ronnie je najlepší!")
+        
+    if message.author == "mrc0mmand":
+        await client.add_reaction(message, poop_emoji)
+        
 client.run(token)
