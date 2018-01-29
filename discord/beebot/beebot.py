@@ -16,6 +16,8 @@ quotes = {
     "St John Chrysostom" : "The bee is more honoured than other animals,not because she labors,but because she labours for others.",
     "Congolese" : "When the bee comes to your house, let her have beer; you may want to visit the bee’s house some day.",
     "Eddie Izzard" : "I'm covered in bees!",
+    "Ralph Waldo Emerson" : "God will not have his work made manifest by cowards.",
+    "Miloš Zeman" : "Kunda sem, kunda tam...",
 }
 
 with open(".token") as fp:
@@ -39,11 +41,5 @@ async def on_message(message):
     if message.content.lower() == "bee":
         author, quote = random.choice(list(quotes.items()))
         await client.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
-
-    if message.content.lower() == "ronnie":
-        await client.send_message(message.channel, "Ronnie je najlepší!")
-
-    if ("hrame" in message.content.lower()) and (message.author.name == "laurittaprobi"):
-        await client.send_message(message.channel, "If only beehives were as big as Lauritta's breasts... *sigh*")
-
+        
 client.run(token)
