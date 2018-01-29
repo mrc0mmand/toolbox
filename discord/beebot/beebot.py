@@ -42,11 +42,8 @@ async def on_message(message):
 
     if message.content.lower() == "ronnie":
         await client.send_message(message.channel, "Ronnie je najlepší!")
-        
-    if message.author.name == "mrc0mmand":
-        await client.add_reaction(message, poop_emoji)
-        
+
     if ("hrame" in message.content.lower()) and (message.author.name == "laurittaprobi"):
         await client.send_message(message.channel, "If only beehives were as big as Lauritta's breasts... *sigh*")
-        
+
 client.run(token)
