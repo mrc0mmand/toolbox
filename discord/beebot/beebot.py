@@ -31,6 +31,7 @@ with open(".token") as fp:
     token = fp.readline().strip()
 
 client = discord.Client()
+weather = Weather()
 
 @client.event
 async def on_ready():
