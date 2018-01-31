@@ -3,6 +3,8 @@
 import discord
 import asyncio
 import random
+from discord.ext.commands import Bot
+from discord.ext import commands
 from weather import Weather
 
 bee_emoji = "🐝"
@@ -30,47 +32,41 @@ def kph(mph):
 with open(".token") as fp:
     token = fp.readline().strip()
 
-client = discord.Client()
+bot = Bot(description="BeeBot", command_prefix="?")
 weather = Weather()
 
-@client.event
-async def on_ready():
-    print("Logged in ({}/{})".format(client.user.name, client.user.id))
-    await client.change_presence(game=discord.Game(name="with a bee"))
+### COMMANDS ###
 
-@client.event
+@bot.command()
+async def weather(*args):
+    loc_parameter   = " ".join(args)
+    response        = weather.lookup_by_location(loc_parameter)
+    condition       = response.condition()
+    weather_report  = "Weather report for " + response.location()['city'] + ", " + response.location()['country'] + \
+                      ": \nCurrent temperature: **" + celsius(condition.temp()) +\
+                      u'\N{DEGREE SIGN}' + "C** \nCondition: **" + condition.text() + \
+                      "**\nWind speed: **" + kph(response.wind()['speed']) + " kph**"
+    await bot.say(weather_report)
+
+@bot.command()
+async def shoot(target):
+    await bot.say("\**Bang bang* \* \n \** {} drops dead* \*".format(target))
+
+@bot.event
+async def on_ready():
+    print("Logged in ({}/{})".format(bot.user.name, bot.user.id))
+    await bot.change_presence(game=discord.Game(name="with a bee"))
+
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
     if "bee" in message.content.lower():
-        await client.add_reaction(message, bee_emoji)
+        await bot.add_reaction(message, bee_emoji)
 
     if message.content.lower() == "bee":
         author, quote = random.choice(list(quotes.items()))
-        await client.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
+        await bot.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
 
-    if (message.content[0] == "?"):
-        # Command mode
-        command     = message.content.lower().split(" ")
-        parameters  = command[1:]
-        command     = command[0]
-
-        if(len(parameters) == 0):
-            await client.send_message(message.channel, "You need to specify second parameter... *Bzzzz*")
-            return
-
-        if (command == "?shoot"):
-            await client.send_message(message.channel, "\**Bang bang* \* \n \**" + parameters[0] + " drops dead* \*")
-
-        if (command == "?weather"):
-            loc_parameter   = " ".join(parameters)
-            response        = weather.lookup_by_location(loc_parameter)
-            condition       = response.condition()
-            weather_report  = "Weather report for " + response.location()['city'] + ", " + response.location()['country'] + \
-                              ": \nCurrent temperature: **" + celsius(condition.temp()) +\
-                              u'\N{DEGREE SIGN}' + "C** \nCondition: **" + condition.text() + \
-                              "**\nWind speed: **" + kph(response.wind()['speed']) + " kph**"
-            await client.send_message(message.channel, weather_report)
-
-client.run(token)
+bot.run(token)
