@@ -57,7 +57,7 @@ async def on_ready():
     print("Logged in ({}/{})".format(bot.user.name, bot.user.id))
     await bot.change_presence(game=discord.Game(name="with a bee"))
 
-@bot.event
+@bot.listen()
 async def on_message(message):
     if message.author == bot.user:
         return
