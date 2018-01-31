@@ -33,14 +33,14 @@ with open(".token") as fp:
     token = fp.readline().strip()
 
 bot = Bot(description="BeeBot", command_prefix="?")
-weather = Weather()
+weather_inst = Weather()
 
 ### COMMANDS ###
 
 @bot.command()
 async def weather(*args):
     loc_parameter   = " ".join(args)
-    response        = weather.lookup_by_location(loc_parameter)
+    response        = weather_inst.lookup_by_location(loc_parameter)
     condition       = response.condition()
     weather_report  = "Weather report for " + response.location()['city'] + ", " + response.location()['country'] + \
                       ": \nCurrent temperature: **" + celsius(condition.temp()) +\
