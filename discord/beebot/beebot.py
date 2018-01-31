@@ -23,7 +23,7 @@ quotes = {
 
 def celsius(fahrenheit):
     return "{:.1f}".format(int((int(fahrenheit) - 32)//1.8))
-    
+
 def kph(mph):
     return "{:.2f}".format(int(mph) * 1.609)
 
@@ -49,28 +49,28 @@ async def on_message(message):
     if message.content.lower() == "bee":
         author, quote = random.choice(list(quotes.items()))
         await client.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
-        
+
     if (message.content[0] == "?"):
         # Command mode
         command     = message.content.lower().split(" ")
         parameters  = command[1:]
-        command     = command[0] 
-     
+        command     = command[0]
+
         if(len(parameters) == 0):
             await client.send_message(message.channel, "You need to specify second parameter... *Bzzzz*")
             return
-    
+
         if (command == "?shoot"):
             await client.send_message(message.channel, "\**Bang bang* \* \n \**" + parameters[0] + " drops dead* \*")
-    
+
         if (command == "?weather"):
-            loc_parameter   = " ".join(parameters)                            
+            loc_parameter   = " ".join(parameters)
             response        = weather.lookup_by_location(loc_parameter)
             condition       = response.condition()
             weather_report  = "Weather report for " + response.location()['city'] + ", " + response.location()['country'] + \
                               ": \nCurrent temperature: **" + celsius(condition.temp()) +\
                               u'\N{DEGREE SIGN}' + "C** \nCondition: **" + condition.text() + \
                               "**\nWind speed: **" + kph(response.wind()['speed']) + " kph**"
-            await client.send_message(message.channel, weather_report) 
-                
+            await client.send_message(message.channel, weather_report)
+
 client.run(token)
