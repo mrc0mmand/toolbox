@@ -69,4 +69,7 @@ async def on_message(message):
         author, quote = random.choice(list(quotes.items()))
         await bot.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
 
+    if message.content.lower() == "j":
+        await bot.say("j")
+
 bot.run(token)
