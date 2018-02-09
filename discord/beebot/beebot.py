@@ -70,6 +70,6 @@ async def on_message(message):
         await bot.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
 
     if message.content.lower() == "j":
-        await bot.say("j")
+        await bot.send_message(message.channel, "j")
 
 bot.run(token)
