@@ -64,7 +64,7 @@ async def insult(target : discord.Member):
         logging.exception("Insult fetching failed")
         return
 
-    await bot.say(f"{target.mention()}: {insult}")
+    await bot.say(f"{target.mention}: {insult}")
 
 @bot.event
 async def on_ready():
