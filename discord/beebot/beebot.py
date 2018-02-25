@@ -3,6 +3,8 @@
 import discord
 import asyncio
 import random
+import requests
+import logging
 from discord.ext.commands import Bot
 from discord.ext import commands
 from weather import Weather
@@ -51,6 +53,18 @@ async def weather(*args):
 @bot.command()
 async def shoot(target):
     await bot.say("\**Bang bang* \* \n \** {} drops dead* \*".format(target))
+
+@bot.command()
+async def insult(target : discord.Member):
+    try:
+        url = "https://evilinsult.com/generate_insult.php?lang=en"
+        res = requests.get(url)
+        insult = str(res.content, encoding="utf-8")
+    except:
+        logging.exception("Insult fetching failed")
+        return
+
+    await bot.say(f"{target}: {insult}")
 
 @bot.event
 async def on_ready():
