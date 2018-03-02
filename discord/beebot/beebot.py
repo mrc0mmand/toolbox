@@ -40,7 +40,7 @@ async def weather(ctx, *location):
 
     await ctx.send("Weather for {}, {}: {}, {}°C, wind: {:.2f} km/h".format(
         response.location().city(), response.location().country(),
-        condition.text(), condition.temp(), response.wind()["speed"]))
+        condition.text(), condition.temp(), float(response.wind()["speed"])))
 
 @bot.command()
 async def shoot(ctx, target):
