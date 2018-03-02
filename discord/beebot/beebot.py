@@ -76,7 +76,7 @@ async def on_message(message):
     channel = message.channel
 
     if "bee" in message.content.lower():
-        await bot.add_reaction(message, bee_emoji)
+        await message.add_reaction(bee_emoji)
 
     if message.content.lower() == "bee":
         author, quote = random.choice(list(quotes.items()))
