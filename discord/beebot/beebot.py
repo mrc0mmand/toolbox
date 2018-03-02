@@ -7,7 +7,7 @@ import requests
 import logging
 from discord.ext.commands import Bot
 from discord.ext import commands
-from weather import Weather
+from weather import Unit, Weather
 
 bee_emoji = "🐝"
 poop_emoji = "💩"
@@ -25,30 +25,23 @@ quotes = {
     "Miloš Zeman" : "Kunda sem, kunda tam...",
 }
 
-def celsius(fahrenheit):
-    return "{:.1f}".format(int((int(fahrenheit) - 32)//1.8))
-
-def kph(mph):
-    return "{:.2f}".format(int(mph) * 1.609)
-
 with open(".token") as fp:
     token = fp.readline().strip()
 
 bot = Bot(description="BeeBot", command_prefix="?")
-weather_inst = Weather()
+weather_ = Weather(unit=Unit.CELSIUS)
 
 ### COMMANDS ###
 
 @bot.command()
-async def weather(ctx, *args):
-    loc_parameter   = " ".join(args)
-    response        = weather_inst.lookup_by_location(loc_parameter)
-    condition       = response.condition()
-    weather_report  = "Weather report for " + response.location()['city'] + ", " + response.location()['country'] + \
-                      ": \nCurrent temperature: **" + celsius(condition.temp()) +\
-                      u'\N{DEGREE SIGN}' + "C** \nCondition: **" + condition.text() + \
-                      "**\nWind speed: **" + kph(response.wind()['speed']) + " kph**"
-    await ctx.send(weather_report)
+async def weather(ctx, *location):
+    kph = lambda x: float(x) * 1.609
+    response = weather_.lookup_by_location(" ".join(location))
+    condition = response.condition()
+
+    await ctx.send("Weather for {}: {}, {}°C, wind: {:.2f} km/h".format(
+        response.location().city(), condition.text(), condition.temp(),
+        kph(response.wind()["speed"])))
 
 @bot.command()
 async def shoot(ctx, target):
