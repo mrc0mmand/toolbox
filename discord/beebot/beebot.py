@@ -39,8 +39,9 @@ async def weather(ctx, *location):
     response = weather_.lookup_by_location(" ".join(location))
     condition = response.condition()
 
-    await ctx.send("Weather for {}: {}, {}°C, wind: {:.2f} km/h".format(
-        response.location().city(), condition.text(), condition.temp(),
+    await ctx.send("Weather for {}, {}: {}, {}°C, wind: {:.2f} km/h".format(
+        response.location().city(), response.location().country(),
+        condition.text(), condition.temp(),
         kph(response.wind()["speed"])))
 
 @bot.command()
