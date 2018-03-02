@@ -35,7 +35,12 @@ weather_ = Weather(unit=Unit.CELSIUS)
 
 @bot.command()
 async def weather(ctx, *location):
-    response = weather_.lookup_by_location(" ".join(location))
+    raw_location = " ".join(location)
+    response = weather_.lookup_by_location(raw_location)
+    if response is None:
+        await ctx.send(f"Unknown location '{raw_location}'")
+        return
+
     condition = response.condition()
 
     await ctx.send("Weather for {}, {}: {}, {}°C, wind: {:.2f} km/h".format(
