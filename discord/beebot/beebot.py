@@ -40,7 +40,7 @@ weather_inst = Weather()
 ### COMMANDS ###
 
 @bot.command()
-async def weather(*args):
+async def weather(ctx, *args):
     loc_parameter   = " ".join(args)
     response        = weather_inst.lookup_by_location(loc_parameter)
     condition       = response.condition()
@@ -48,14 +48,14 @@ async def weather(*args):
                       ": \nCurrent temperature: **" + celsius(condition.temp()) +\
                       u'\N{DEGREE SIGN}' + "C** \nCondition: **" + condition.text() + \
                       "**\nWind speed: **" + kph(response.wind()['speed']) + " kph**"
-    await bot.say(weather_report)
+    await ctx.send(weather_report)
 
 @bot.command()
-async def shoot(target):
-    await bot.say("\**Bang bang* \* \n \** {} drops dead* \*".format(target))
+async def shoot(ctx, target):
+    await ctx.send("\**Bang bang* \* \n \** {} drops dead* \*".format(target))
 
 @bot.command()
-async def insult(target : discord.Member):
+async def insult(ctx, target : discord.Member):
     try:
         url = "https://evilinsult.com/generate_insult.php?lang=en"
         res = requests.get(url)
@@ -64,7 +64,7 @@ async def insult(target : discord.Member):
         logging.exception("Insult fetching failed")
         return
 
-    await bot.say(f"{target.mention}: {insult}")
+    await ctx.send(f"{target.mention}: {insult}")
 
 @bot.event
 async def on_ready():
@@ -76,14 +76,16 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+    channel = message.channel
+
     if "bee" in message.content.lower():
         await bot.add_reaction(message, bee_emoji)
 
     if message.content.lower() == "bee":
         author, quote = random.choice(list(quotes.items()))
-        await bot.send_message(message.channel, "*\"{}\"* - {}".format(quote, author))
+        await channel.send("*\"{}\"* - {}".format(quote, author))
 
     if any(x == message.content for x in ['J', 'j']):
-        await bot.send_message(message.channel, message.content)
+        await channel.send(message.content)
 
 bot.run(token)
