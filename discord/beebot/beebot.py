@@ -4,6 +4,7 @@ import asyncio
 import discord
 import logging
 import random
+import re
 import requests
 from discord.ext.commands import Bot
 from discord.ext import commands
@@ -84,5 +85,9 @@ async def on_message(message):
 
     if any(x == message.content for x in ['J', 'j']):
         await channel.send(message.content)
+
+    m = re.search("store.steampowered.com/app/([0-9]+)", message.content)
+    if m:
+        await channel.send("steam://store/{}".format(m[1]))
 
 bot.run(token)
