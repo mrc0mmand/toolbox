@@ -1,10 +1,10 @@
 #!/bin/env python3
 
-import discord
 import asyncio
+import discord
+import logging
 import random
 import requests
-import logging
 from discord.ext.commands import Bot
 from discord.ext import commands
 from weather import Unit, Weather
