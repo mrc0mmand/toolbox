@@ -64,6 +64,11 @@ async def insult(ctx, target : discord.Member):
 
     await ctx.send(f"{target.mention}: {insult}")
 
+@bot.command()
+@commands.is_owner()
+async def purge(ctx, number : int):
+    await ctx.channel.purge(limit=number)
+
 @bot.event
 async def on_ready():
     print("Logged in ({}/{})".format(bot.user.name, bot.user.id))
