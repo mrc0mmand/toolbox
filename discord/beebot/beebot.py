@@ -26,6 +26,14 @@ quotes = {
     "Miloš Zeman" : "Kunda sem, kunda tam...",
 }
 
+ah_quotes = [
+    "Das bolschewistische {}, dem sie die europäischen Nationen ausliefern wollen, wird sie und ihre Völker dereinst selbst zerfetzen!",
+    "Wir sind uns im klaren, daß dieser Krieg ja nur damit enden könnte, daß {} ausgerottet wird!",
+    "Mit jedem Kind, das sie {} zur Welt bringt, kämpft sie ihren Kampf für die Nation!",
+    "Polen hat nun heute nacht zum erstenmal auf unserem eigenen Territorium auch durch reguläre {} geschossen!",
+    "Toter {}, geh ein in Walhall!",
+]
+
 with open(".token") as fp:
     token = fp.readline().strip()
 
@@ -64,6 +72,11 @@ async def insult(ctx, target : discord.Member):
 
     await ctx.send(f"{target.mention}: {insult}")
 
+@bot.command()
+async def gas(ctx, target):
+    quote = random.choice(ah_quotes)
+    await ctx.send(quote.format(target));
+    
 @bot.command()
 @commands.is_owner()
 async def purge(ctx, number : int):
