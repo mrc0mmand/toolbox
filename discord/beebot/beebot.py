@@ -108,4 +108,12 @@ async def on_message(message):
     if m:
         await channel.send("steam://store/{}".format(m[1]))
 
+@bot.listen()
+async def on_message_delete(message):
+    if message.author == bot.user:
+        return
+
+    await message.channel.send("{}: u little piece of shit >:("
+            .format(message.author.mention))
+
 bot.run(token)
