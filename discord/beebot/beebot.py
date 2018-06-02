@@ -76,7 +76,7 @@ async def insult(ctx, target : discord.Member):
 async def gas(ctx, target):
     quote = random.choice(ah_quotes)
     await ctx.send(quote.format(target));
-    
+
 @bot.command()
 @commands.is_owner()
 async def purge(ctx, number : int):
