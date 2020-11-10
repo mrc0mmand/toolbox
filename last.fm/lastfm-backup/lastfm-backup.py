@@ -96,7 +96,7 @@ def printv(string):
 def url_get(url, urlvars, timeout=5):
     for interval in (1, 5, 10, 60, 120, 180):
         try:
-            f = requests.get(url ,data=urlvars, timeout=timeout)
+            f = requests.get(url, params=urlvars, timeout=timeout)
             if f.status_code != requests.codes.ok:
                 raise Exception("Timeout reached ({})".format(f.status_code))
             else:
